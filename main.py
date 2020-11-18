@@ -7,6 +7,9 @@ import torchio
 from torchio.transforms import (ZNormalization,
                                 Resample, Compose, Lambda)
 
+from torch.utils.data import DataLoader
+
+
 data_dir = './data' # put data in specific location
 
 subjects_list = []
@@ -23,7 +26,7 @@ for i in range(200):
 
 # populate transform list
 transforms_list = []
-transforms_list.append(Resample([1,1,1]))
+transforms_list.append(Resample((1,1,1)))
 transforms_list.append(ZNormalization())
 
 transform = Compose(transforms_list)
@@ -33,6 +36,16 @@ subjects_dataset = torchio.SubjectsDataset(subjects_list, transform=transform)
 sampler = torchio.data.UniformSampler([256,256,32])
 # all of these need to be read from model.yaml
 patches_queue = torchio.Queue(subjects_dataset, max_length=1,
-                              samples_per_volume=5,
+                              samples_per_volume=1,
                               sampler=sampler, num_workers=0,
                               shuffle_subjects=True, shuffle_patches=True, verbose=True)
+
+data_loader = DataLoader(patches_queue, batch_size=1, shuffle=True)
+
+for batch_idx, (subject) in enumerate(data_loader):
+    image = subject['image'][torchio.DATA]
+    mask = subject['label'][torchio.DATA]
+    print('image.shape: ', image.shape)
+    print('mask.shape: ', mask.shape)
+
+print('Finished')
