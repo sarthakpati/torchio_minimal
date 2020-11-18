@@ -19,7 +19,7 @@ pip install -e .
 
 ### Data
 
-Download from https://1drv.ms/u/s!AgvRZZtXCbbOnPgMjwBnFkHFdmNl-w?e=cRzBhA and expand into `${repo_name}` so that all data is in `${repo_name}/data`
+Download from https://1drv.ms/u/s!AgvRZZtXCbbOnPgPFJtmucE_eMYoxA?e=lpRImD and expand into `${repo_name}` so that all data is in `${repo_name}/data`
 
 ### Run
 
