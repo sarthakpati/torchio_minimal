@@ -20,3 +20,10 @@ for i in range(200):
         subject_dict['image'] = Image(imageFileToCheck, type=torchio.INTENSITY)
         subject_dict['label'] = Image(maskFileToCheck, type=torchio.LABEL)
         subjects_list.append(Subject(subject_dict))
+
+# populate transform list
+transforms_list = []
+transforms_list.append(Resample([1,1,1]))
+transforms_list.append(ZNormalization())
+
+transform = Compose(transforms_list)
