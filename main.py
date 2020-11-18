@@ -2,13 +2,29 @@
 # -*- coding: utf-8 -*-
 
 import os
+os.environ['TORCHIO_HIDE_CITATION_PROMPT'] = '1'
 from torchio import Image, Subject
+import torch
 import torchio
 from torchio.transforms import (ZNormalization,
                                 Resample, Compose, Lambda)
 
 from torch.utils.data import DataLoader
 
+
+def one_hot(segmask_array, class_list):
+    batch_size = segmask_array.shape[0]
+    batch_stack = []
+    for b in range(batch_size):
+        one_hot_stack = []
+        segmask_array_iter = segmask_array[b,0]
+        for class_ in class_list:
+            bin_mask = (segmask_array_iter == int(class_))
+            one_hot_stack.append(bin_mask)
+        one_hot_stack = torch.stack(one_hot_stack)
+        batch_stack.append(one_hot_stack)
+    batch_stack = torch.stack(batch_stack)    
+    return batch_stack
 
 data_dir = './data' # put data in specific location
 
@@ -33,19 +49,23 @@ transform = Compose(transforms_list)
 
 subjects_dataset = torchio.SubjectsDataset(subjects_list, transform=transform)
 
-sampler = torchio.data.UniformSampler([256,256,32])
+sampler = torchio.data.LabelSampler([256,256,32])
 # all of these need to be read from model.yaml
 patches_queue = torchio.Queue(subjects_dataset, max_length=1,
                               samples_per_volume=1,
                               sampler=sampler, num_workers=0,
-                              shuffle_subjects=True, shuffle_patches=True, verbose=True)
+                              shuffle_subjects=True, shuffle_patches=True, verbose=False)
 
 data_loader = DataLoader(patches_queue, batch_size=1, shuffle=True)
 
-for batch_idx, (subject) in enumerate(data_loader):
-    image = subject['image'][torchio.DATA]
+for batch_idx, (subject) in enumerate(data_loader): # iterate through full training data
+    # accumulate dice weights for each label
     mask = subject['label'][torchio.DATA]
-    print('image.shape: ', image.shape)
-    print('mask.shape: ', mask.shape)
+    image = subject['image'][torchio.DATA]
+    if mask.shape != image.shape:
+        print('image.path: ', subject['0'][torchio.PATH])
+        print('image.shape: ', image.shape)
+        print('label.path: ', subject['label'][torchio.PATH])
+        print('label.shape: ', mask.shape)
 
 print('Finished')
